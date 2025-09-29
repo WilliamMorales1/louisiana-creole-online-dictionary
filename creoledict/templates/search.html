@@ -2,10 +2,12 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Search Dictionary</title>
+    <title>Dictionary of Louisiana Creole</title>
 </head>
 <body>
-    <h1>Search Dictionary</h1>
+    <h1>Dictionary of Louisiana Creole</h1>
+    <p>Original Dictionary by Albert Valdman, Thomas A. Klingler, Margaret M. Marshall, Kevin J. Rottet</p>
+    <p>The contents of this website remains the intellectual property of the authors above.</p>
 
     <form method="get" action="{% url 'search_dictionary' %}">
         <input type="text" name="q" value="{{ query }}" placeholder="Search...">
