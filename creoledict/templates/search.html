@@ -11,9 +11,19 @@
         <input type="text" name="q" value="{{ query }}" placeholder="Search...">
         
         <select name="field">
-            <option value="headword" {% if field == "headword" %}selected{% endif %}>Headword</option>
-            <option value="content" {% if field == "content" %}selected{% endif %}>Content</option>
+            <option value="headword" {% if field == "headword" %}selected{% endif %}>Louisiana Creole</option>
+            <option value="content" {% if field == "content" %}selected{% endif %}>English</option>
         </select>
+        
+        <label>
+            <input type="checkbox" name="whole_word" {% if whole_word %}checked{% endif %}>
+            Match whole words
+        </label>
+
+        <label>
+            <input type="checkbox" name="match_accents" {% if match_accents %}checked{% endif %}>
+            Match accents
+        </label>
         
         <button type="submit">Search</button>
     </form>
