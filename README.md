@@ -8,7 +8,7 @@ Steps to download and use:
 2. Install Python if you don't already have it.
 3. Open terminal and run the following commands:
    1. git clone https://github.com/WilliamMorales1/louisiana-creole-online-dictionary
-   2. cd valdman-dictionaries
+   2. cd louisiana-creole-online-dictionary
    3. pip install -r requirements.txt
    4. python manage.py migrate
    5. python manage.py runserver
