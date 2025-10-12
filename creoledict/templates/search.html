@@ -11,16 +11,16 @@
     <h1>Dictionary of Louisiana Creole</h1>
     <p>Original Dictionary by Albert Valdman, Thomas A. Klingler, Margaret M. Marshall, Kevin J. Rottet</p>
     <p>The contents of this website remain the intellectual property of the authors above.</p>
+    <p>Website created by William S. Morales.</p>
 
     <form method="get" action="{% url 'search_dictionary' %}">
         <input type="text" name="q" value="{{ query }}" placeholder="Search...">
-        
+
         <select name="field">
             <option value="headword" {% if field == "headword" %}selected{% endif %}>Louisiana Creole</option>
             <option value="definitions" {% if field == "definitions" %}selected{% endif %}>English</option>
         </select>
 
-        <!-- Filter by part of speech -->
         <select name="part_of_speech">
             <option value="">All Parts of Speech</option>
             {% for part_of_speech in all_pos %}
@@ -30,60 +30,88 @@
             {% endfor %}
         </select>
 
+        <!-- Sources filter -->
+        <select name="source">
+            <option value="">All Sources</option>
+            {% for source_text in all_sources %}
+                <option value="{{ source_text }}" {% if source_text == selected_source %}selected{% endif %}>
+                    {{ source_text }}
+                </option>
+            {% endfor %}
+        </select>
+
+
         <label>
-            <input type="checkbox" name="whole_word" {% if whole_word %}checked{% endif %}>
-            Match whole words
+            <input type="checkbox" name="whole_word" {% if whole_word %}checked{% endif %}> Match whole words
         </label>
 
         <label>
-            <input type="checkbox" name="match_accents" {% if match_accents %}checked{% endif %}>
-            Match accents
+            <input type="checkbox" name="match_accents" {% if match_accents %}checked{% endif %}> Match accents
         </label>
-        
+
         <button type="submit">Search</button>
     </form>
 
     <hr>
+<ul>
+    {% for entry in results %}
+        <li style="margin-bottom: 1em; position: relative;">
+            <!-- Headword -->
+            <span class="hover-container" style="position: relative; cursor: pointer;">
+                <strong>{{ entry.headword|highlight:highlight_opts|safe }}</strong>
+                <span class="hover-sources">{{ entry.sources_display|highlight:highlight_opts|safe }}</span>
+            </span>
 
-    {% if results|length > 0 %}
-        <h2>Results for "{{ query }}" in {{ field|capfirst }}:</h2>
-        <ul>
-            {% for entry in results %}
-                <li style="margin-bottom: 1em;">
-                    <!-- Headword -->
-                    <strong>{{ entry.headword|highlight:highlight_opts|safe }}</strong>
+            <!-- Parts of Speech -->
+            {% if entry.parts_of_speech.all %}
+                <em>(
+                    {% for pos in entry.parts_of_speech.all %}
+                        {{ pos.part_of_speech|highlight:highlight_opts|safe }}{% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                )</em>
+            {% endif %}
 
-                    <!-- Show all parts of speech -->
-                    {% if entry.parts_of_speech.all %}
-                        <em>(
-                            {% for pos in entry.parts_of_speech.all %}
-                                {{ pos.part_of_speech|highlight:highlight_opts|safe }}{% if not forloop.last %}, {% endif %}
-                            {% endfor %}
-                        )</em>
-                    {% endif %}
-
-                    <!-- Sources and Variants -->
-                    {% if entry.sources_and_variants %}
-                        <div style="margin-left: 1.5em;">
-                            <small>{{ entry.sources_and_variants|highlight:highlight_opts|safe }}</small>
-                        </div>
-                    {% endif %}
-
-                    <!-- Definitions -->
-                    {% if entry.definitions.all %}
-                        <ol style="margin-left: 2em;">
-                            {% for definition in entry.definitions.all %}
-                                <li>{{ definition.text|italicize_asterisks|highlight:highlight_opts|safe }}</li>
-                            {% endfor %}
-                        </ol>
-                    {% else %}
-                        <p style="margin-left: 2em; color: #666;">No definitions found.</p>
-                    {% endif %}
-                </li>
+            <!-- Variants -->
+            {% for variant in entry.variants_display %}
+                <span class="hover-container" style="position: relative; display: inline-block; margin-right: 10px; cursor: pointer;">
+                    {{ variant.text|highlight:highlight_opts|safe }}
+                    <span class="hover-sources">{{ variant.sources_display|highlight:highlight_opts|safe }}</span>
+                </span>
             {% endfor %}
-        </ul>
-    {% else %}
-        <h2>No results found for "{{ query }}".</h2>
-    {% endif %}
+
+            <!-- Definitions -->
+            {% if entry.definitions.all %}
+                <ol style="margin-left: 2em; margin-top: 0.5em;">
+                    {% for definition in entry.definitions.all %}
+                        <li>{{ definition.text|italicize_asterisks|highlight:highlight_opts|safe }}</li>
+                    {% endfor %}
+                </ol>
+            {% else %}
+                <p style="margin-left: 2em; color: #666;">No definitions found.</p>
+            {% endif %}
+        </li>
+    {% endfor %}
+</ul>
+
+<style>
+.hover-sources {
+    display: none;
+    position: absolute;
+    top: 1.2em;
+    left: 0;
+    background: #f9f9f9;
+    border: 1px solid #ccc;
+    padding: 0.3em 0.5em;
+    border-radius: 4px;
+    white-space: nowrap;
+    z-index: 10;
+}
+
+.hover-container:hover > .hover-sources {
+    display: inline-block;
+}
+</style>
+
+
 </body>
 </html>
