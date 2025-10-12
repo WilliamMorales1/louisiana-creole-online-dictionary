@@ -18,7 +18,7 @@
 
         <select name="field">
             <option value="headword" {% if field == "headword" %}selected{% endif %}>Louisiana Creole</option>
-            <option value="definitions" {% if field == "definitions" %}selected{% endif %}>English</option>
+            <option value="definitions" {% if field == "definitions" %}selected{% endif %}>English, French</option>
         </select>
 
         <select name="part_of_speech">
@@ -40,6 +40,9 @@
             {% endfor %}
         </select>
 
+        <label>
+            <input type="checkbox" name="include_examples" {% if include_examples %}checked{% endif %}>Search examples
+        </label>
 
         <label>
             <input type="checkbox" name="whole_word" {% if whole_word %}checked{% endif %}> Match whole words
@@ -83,7 +86,20 @@
             {% if entry.definitions.all %}
                 <ol style="margin-left: 2em; margin-top: 0.5em;">
                     {% for definition in entry.definitions.all %}
-                        <li>{{ definition.text|italicize_asterisks|highlight:highlight_opts|safe }}</li>
+                        <li>
+                            <!-- Gloss -->
+                            {{ definition.gloss|italicize_asterisks|highlight:highlight_opts|safe }}
+
+                            <!-- Examples (hidden by default) -->
+                            {% if definition.examples %}
+                                <span class="examples-text" style="display: none;">
+                                    <br>{{ definition.examples|italicize_asterisks|highlight:highlight_opts|safe }}
+                                </span>
+                                <a href="#" class="toggle-examples" style="color: #0066cc; font-size: 0.9em; text-decoration: underline;">
+                                    See examples
+                                </a>
+                            {% endif %}
+                        </li>
                     {% endfor %}
                 </ol>
             {% else %}
@@ -112,6 +128,42 @@
 }
 </style>
 
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll(".toggle-examples").forEach(link => {
+        link.addEventListener("click", e => {
+            e.preventDefault();
+            const examples = link.previousElementSibling;
+            if (examples.style.display === "none") {
+                examples.style.display = "inline";
+                link.textContent = "Hide examples";
+            } else {
+                examples.style.display = "none";
+                link.textContent = "See examples";
+            }
+        });
+    });
+});
+</script>
+
+<style>
+.examples-text {
+    color: #444;
+}
+.toggle-examples:hover {
+    text-decoration: none;
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const fieldSelect = document.querySelector('select[name="field"]');
+    const examplesLabel = document.getElementById('search-examples-label');
+    fieldSelect.addEventListener('change', () => {
+        examplesLabel.style.display = fieldSelect.value === 'definitions' ? 'inline' : 'none';
+    });
+});
+</script>
 
 </body>
 </html>
