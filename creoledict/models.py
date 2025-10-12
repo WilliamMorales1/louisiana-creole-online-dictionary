@@ -36,7 +36,11 @@ class Source(models.Model):
         db_table = 'sources'  # Must match your existing table name
 
     def __str__(self):
-        return f"{self.variant.text if self.variant else self.entry.headword} ({self.text})"
+        # Only access variant.text if variant exists
+        if self.variant_id:  # safer than self.variant
+            return f"{self.variant.text} ({self.text})"
+        else:
+            return f"{self.entry.headword} ({self.text})"
 
 
 class Definition(models.Model):

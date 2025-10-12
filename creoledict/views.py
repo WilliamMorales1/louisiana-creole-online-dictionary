@@ -1,111 +1,130 @@
 from django.shortcuts import render
-from .models import Entry, POS, Source
+from .models import Entry, Variant, Source, Definition, POS
+from django.db.models import Q, Prefetch
 import unicodedata
-from django.db.models import Q
+
+def normalize_text(text):
+    # Normalize to NFD (decomposed) form
+    return unicodedata.normalize('NFD', text)
+
+def strip_accents(text):
+    text = unicodedata.normalize('NFD', text)
+    return ''.join(c for c in text if unicodedata.category(c) != 'Mn')
 
 def search_dictionary(request):
-    query = request.GET.get('q', '')
+    query = request.GET.get('q', '').strip()
     field = request.GET.get('field', 'headword')
     whole_word = 'whole_word' in request.GET
     match_accents = 'match_accents' in request.GET
     selected_pos = request.GET.get('part_of_speech', '')
     selected_source = request.GET.get('source', '')
 
-    # Base queryset
+    if not match_accents:
+        # Normalize and strip accents from query
+        query = strip_accents(query)
+
+    # Prefetch related objects to avoid N+1 queries
+    variants_prefetch = Prefetch('variants', queryset=Variant.objects.prefetch_related('sources'))
     results = Entry.objects.all().prefetch_related(
-        'definitions', 'parts_of_speech', 'sources', 'variants__sources'
-    )
+        'definitions',
+        'parts_of_speech',
+        'sources',
+        variants_prefetch
+    ).distinct()
 
-    # Populate POS dropdown
-    all_pos = (
-        POS.objects.exclude(part_of_speech__isnull=True)
-        .exclude(part_of_speech__exact='')
-        .values_list('part_of_speech', flat=True)
-        .distinct()
-        .order_by('part_of_speech')
-    )
+    # --- Populate POS dropdown ---
+    all_pos = POS.objects.exclude(part_of_speech__isnull=True).exclude(part_of_speech='') \
+        .values_list('part_of_speech', flat=True).distinct().order_by('part_of_speech')
 
-    # Populate Sources dropdown (include entry and variant sources, no duplicates)
-    all_sources = (
-        Source.objects.filter(
-            Q(entry__isnull=False) | Q(variant__isnull=False)
-        )
-        .exclude(text__isnull=True)
-        .exclude(text__exact='')
-        .values_list('text', flat=True)
-        .distinct()
-        .order_by('text')
-    )
+    # --- Populate Sources dropdown (entry + variant sources) ---
+    all_sources = Source.objects.filter(
+        Q(entry__isnull=False) | Q(variant__isnull=False)
+    ).exclude(text__isnull=True).exclude(text='') \
+        .values_list('text', flat=True).distinct().order_by('text')
 
-    # --- Apply search filter only if query is given ---
-    if query.strip():
+    # --- Apply search query ---
+    if query:
         search_query = query
-
-        # Handle accent normalization
         if not match_accents:
-            def strip_accents(s):
-                return ''.join(
-                    c for c in unicodedata.normalize('NFD', s)
-                    if unicodedata.category(c) != 'Mn'
-                )
             search_query = strip_accents(search_query)
 
         if field == 'definitions':
             results = results.filter(definitions__text__icontains=search_query)
         else:
             if whole_word:
-                all_entries = results
+                # Whole-word search across headword and variants
                 matched_ids = []
-                for entry in all_entries:
-                    value = getattr(entry, field, '') or ''
-                    comp_value = value
+                for entry in results:
+                    # Check headword
+                    value = entry.headword
+                    comp_value = value if match_accents else strip_accents(value)
                     comp_search = search_query
-                    if not match_accents:
-                        comp_value = ''.join(
-                            c for c in unicodedata.normalize('NFD', comp_value)
-                            if unicodedata.category(c) != 'Mn'
-                        )
-                        comp_search = ''.join(
-                            c for c in unicodedata.normalize('NFD', comp_search)
-                            if unicodedata.category(c) != 'Mn'
-                        )
-                    words = comp_value.split()
-                    if any(w.lower() == comp_search.lower() for w in words):
+                    if any(w.lower() == comp_search.lower() for w in comp_value.split()):
                         matched_ids.append(entry.id)
+                        continue
+
+                    # Check variants
+                    for variant in entry.variants.all():
+                        v_text = variant.text or ''
+                        comp_variant = v_text if match_accents else strip_accents(v_text)
+                        if any(w.lower() == comp_search.lower() for w in comp_variant.split()):
+                            matched_ids.append(entry.id)
+                            break
                 results = results.filter(id__in=matched_ids)
             else:
-                results = results.filter(**{f'{field}__icontains': search_query})
+                matched_ids = []
+                for entry in results:
+                    head = entry.headword or ''
+                    comp_head = head if match_accents else strip_accents(head)
+                    if search_query.lower() in comp_head.lower():
+                        matched_ids.append(entry.id)
+                        continue
 
-    # --- Apply part_of_speech filter ---
+                    for variant in entry.variants.all():
+                        v_text = variant.text or ''
+                        comp_variant = v_text if match_accents else strip_accents(v_text)
+                        if search_query.lower() in comp_variant.lower():
+                            matched_ids.append(entry.id)
+                            break
+
+                results = results.filter(id__in=matched_ids)
+
+    # --- Filter by Part of Speech ---
     if selected_pos:
         results = results.filter(parts_of_speech__part_of_speech=selected_pos)
 
-    # --- Apply source filter ---
+    # --- Filter by Source (entry or variant) ---
     if selected_source:
         results = results.filter(
-            Q(sources__text=selected_source) | Q(variants__sources__text=selected_source)
-        )
+            Q(sources__text=selected_source) |
+            Q(variants__sources__text=selected_source)
+        ).distinct()
 
-    # Process sources for display
+    # --- Process sources for display ---
     processed_results = []
+
     for entry in results:
-        # Only sources directly tied to the entry (exclude variant sources)
+        # --- Entry-level sources only ---
         entry_sources = [
-            s.text.strip() for s in entry.sources.all()
-            if s.text and s.text.strip() and getattr(s, 'variant', None) is None
+            s.text.strip() 
+            for s in entry.sources.all() 
+            if s.text and s.text.strip() and s.variant_id is None
         ]
         entry.sources_display = ', '.join(entry_sources) if entry_sources else "No sources"
 
-        # Variant sources
-        entry.variants_display = []
+        # --- Variants with their own sources ---
+        variants_list = []
         for variant in entry.variants.all():
+            # Only get sources linked to this variant
             variant_sources = [
-                s.text.strip() for s in variant.sources.all()
-                if s.text and s.text.strip()
+                s.text.strip() 
+                for s in variant.sources.all() 
+                if s.text and s.text.strip() and s.variant_id == variant.id
             ]
             variant.sources_display = ', '.join(variant_sources) if variant_sources else "No sources"
-            entry.variants_display.append(variant)
+            variants_list.append(variant)
 
+        entry.variants_display = variants_list
         processed_results.append(entry)
 
     context = {
