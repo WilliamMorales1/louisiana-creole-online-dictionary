@@ -1,6 +1,6 @@
 # Louisiana Creole Online Dictionary
 
-Valdman Louisiana Creole and Louisiana French with improved UI and searchability.
+Valdman Louisiana Creole with improved UI and searchability.
 
 Steps to download and use:
 
