@@ -4,5 +4,5 @@ from creoledict import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('search/', views.search_dictionary, name='search_dictionary'),
+    path('', views.search_dictionary, name='search_dictionary'),
 ]
