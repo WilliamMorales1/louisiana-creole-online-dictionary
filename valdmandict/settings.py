@@ -76,7 +76,7 @@ WSGI_APPLICATION = 'valdmandict.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'kouri-vini-dict.db',
+        'NAME': BASE_DIR / 'dictionary_entries.db',
     }
 }
 

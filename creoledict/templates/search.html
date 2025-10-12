@@ -5,18 +5,31 @@
     <title>Dictionary of Louisiana Creole</title>
 </head>
 <body>
+    {% load highlight %}
+    {% load text_format %}
+
     <h1>Dictionary of Louisiana Creole</h1>
     <p>Original Dictionary by Albert Valdman, Thomas A. Klingler, Margaret M. Marshall, Kevin J. Rottet</p>
-    <p>The contents of this website remains the intellectual property of the authors above.</p>
+    <p>The contents of this website remain the intellectual property of the authors above.</p>
 
     <form method="get" action="{% url 'search_dictionary' %}">
         <input type="text" name="q" value="{{ query }}" placeholder="Search...">
         
         <select name="field">
             <option value="headword" {% if field == "headword" %}selected{% endif %}>Louisiana Creole</option>
-            <option value="content" {% if field == "content" %}selected{% endif %}>English</option>
+            <option value="definitions" {% if field == "definitions" %}selected{% endif %}>English</option>
         </select>
-        
+
+        <!-- Filter by part of speech -->
+        <select name="part_of_speech">
+            <option value="">All Parts of Speech</option>
+            {% for part_of_speech in all_pos %}
+                <option value="{{ part_of_speech }}" {% if part_of_speech == selected_pos %}selected{% endif %}>
+                    {{ part_of_speech }}
+                </option>
+            {% endfor %}
+        </select>
+
         <label>
             <input type="checkbox" name="whole_word" {% if whole_word %}checked{% endif %}>
             Match whole words
@@ -32,17 +45,45 @@
 
     <hr>
 
-    {% if query %}
+    {% if results|length > 0 %}
         <h2>Results for "{{ query }}" in {{ field|capfirst }}:</h2>
-        {% if results %}
-            <ul>
-                {% for entry in results %}
-                    <li>{{ entry.headword }} - {{ entry.content }}</li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <p>No results found.</p>
-        {% endif %}
+        <ul>
+            {% for entry in results %}
+                <li style="margin-bottom: 1em;">
+                    <!-- Headword -->
+                    <strong>{{ entry.headword|highlight:highlight_opts|safe }}</strong>
+
+                    <!-- Show all parts of speech -->
+                    {% if entry.parts_of_speech.all %}
+                        <em>(
+                            {% for pos in entry.parts_of_speech.all %}
+                                {{ pos.part_of_speech|highlight:highlight_opts|safe }}{% if not forloop.last %}, {% endif %}
+                            {% endfor %}
+                        )</em>
+                    {% endif %}
+
+                    <!-- Sources and Variants -->
+                    {% if entry.sources_and_variants %}
+                        <div style="margin-left: 1.5em;">
+                            <small>{{ entry.sources_and_variants|highlight:highlight_opts|safe }}</small>
+                        </div>
+                    {% endif %}
+
+                    <!-- Definitions -->
+                    {% if entry.definitions.all %}
+                        <ol style="margin-left: 2em;">
+                            {% for definition in entry.definitions.all %}
+                                <li>{{ definition.text|italicize_asterisks|highlight:highlight_opts|safe }}</li>
+                            {% endfor %}
+                        </ol>
+                    {% else %}
+                        <p style="margin-left: 2em; color: #666;">No definitions found.</p>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <h2>No results found for "{{ query }}".</h2>
     {% endif %}
 </body>
 </html>
