@@ -47,6 +47,8 @@ class Definition(models.Model):
     entry = models.ForeignKey(Entry, on_delete=models.CASCADE, related_name="definitions")
     def_number = models.PositiveIntegerField()
     text = models.TextField()
+    gloss = models.TextField()
+    examples = models.TextField()
 
     class Meta:
         managed = False  # Don't let Django try to create the table
