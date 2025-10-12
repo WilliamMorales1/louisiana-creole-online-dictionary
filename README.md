@@ -7,7 +7,7 @@ Steps to download and use:
 1. Download files and open folder in VSCode.
 2. Install Python if you don't already have it.
 3. Open terminal and run the following commands:
-   1. git clone https://github.com/WilliamMorales1/valdman-dictionaries
+   1. git clone https://github.com/WilliamMorales1/louisiana-creole-online-dictionary
    2. cd valdman-dictionaries
    3. pip install -r requirements.txt
    4. python manage.py migrate
