@@ -55,8 +55,9 @@
 
         <button type="submit">Search</button>
     </form>
-
     <hr>
+
+{% if results %}
 <ul>
     {% for entry in results %}
         <li style="margin-bottom: 1em; position: relative;">
@@ -67,13 +68,11 @@
             </span>
 
             <!-- Parts of Speech -->
-            {% if entry.parts_of_speech.all %}
-                <em>(
-                    {% for pos in entry.parts_of_speech.all %}
-                        {{ pos.part_of_speech|highlight:highlight_opts|safe }}{% if not forloop.last %}, {% endif %}
-                    {% endfor %}
-                )</em>
-            {% endif %}
+            <em>(
+                {% for pos in entry.parts_of_speech.all %}
+                    {{ pos.part_of_speech|highlight:highlight_opts|safe }}{% if not forloop.last %}, {% endif %}
+                {% endfor %}
+            )</em>
 
             <!-- Variants -->
             {% for variant in entry.variants_display %}
@@ -84,31 +83,30 @@
             {% endfor %}
 
             <!-- Definitions -->
-            {% if entry.definitions.all %}
-                <ol style="margin-left: 2em; margin-top: 0.5em;">
-                    {% for definition in entry.definitions.all %}
-                        <li>
-                            <!-- Gloss -->
-                            {{ definition.gloss|italicize_asterisks|highlight:highlight_opts|safe }}
+            <ol style="margin-left: 2em; margin-top: 0.5em;">
+                {% for definition in entry.definitions.all %}
+                    <li>
+                        <!-- Gloss -->
+                        {{ definition.gloss|italicize_asterisks|highlight:highlight_opts|safe }}
 
-                            <!-- Examples (hidden by default) -->
-                            {% if definition.examples %}
-                                <span class="examples-text" style="display: none;">
-                                    <br>{{ definition.examples|italicize_asterisks|highlight:highlight_opts|safe }}
-                                </span>
-                                <a href="#" class="toggle-examples" style="color: #0066cc; font-size: 0.9em; text-decoration: underline;">
-                                    See examples
-                                </a>
-                            {% endif %}
-                        </li>
-                    {% endfor %}
-                </ol>
-            {% else %}
-                <p style="margin-left: 2em; color: #666;">No definitions found.</p>
-            {% endif %}
+                        <!-- Examples (hidden by default) -->
+                        {% if definition.examples %}
+                            <span class="examples-text" style="display: none;">
+                                <br>{{ definition.examples|italicize_asterisks|highlight:highlight_opts|safe }}
+                            </span>
+                            <a href="#" class="toggle-examples" style="color: #0066cc; font-size: 0.9em; text-decoration: underline;">
+                                See examples
+                            </a>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ol>
         </li>
     {% endfor %}
 </ul>
+{% else %}
+    <h2 style="margin-left: 2em; color: #666;">No entries found.</h2>
+{% endif %}
 
 <style>
 .hover-sources {

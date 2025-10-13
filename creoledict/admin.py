@@ -9,15 +9,15 @@ class DefinitionInline(admin.TabularInline):
 # --- Entry Admin ---
 @admin.register(Entry)
 class EntryAdmin(admin.ModelAdmin):
-    list_display = ("headword", "sources_and_variants")
-    search_fields = ("headword", "sources_and_variants", "definitions__text")
+    list_display = ("headword",)
+    search_fields = ("headword", "definitions__gloss")
     inlines = [DefinitionInline]
 
 # --- Definition Admin (optional standalone view) ---
 @admin.register(Definition)
 class DefinitionAdmin(admin.ModelAdmin):
-    list_display = ("entry", "text")
-    search_fields = ("text", "entry__headword")
+    list_display = ("entry", "gloss", "examples")
+    search_fields = ("gloss", "entry__headword")
 
 @admin.register(POS)
 class POSAdmin(admin.ModelAdmin):
