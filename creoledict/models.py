@@ -2,7 +2,6 @@ from django.db import models
 
 class Entry(models.Model):
     headword = models.CharField(max_length=255)
-    sources_and_variants = models.CharField(max_length=255, blank=True, null=True)
 
     class Meta:
         managed = False  # Don't let Django try to create the table
@@ -46,7 +45,6 @@ class Source(models.Model):
 class Definition(models.Model):
     entry = models.ForeignKey(Entry, on_delete=models.CASCADE, related_name="definitions")
     def_number = models.PositiveIntegerField()
-    text = models.TextField()
     gloss = models.TextField()
     examples = models.TextField()
 
@@ -57,6 +55,7 @@ class Definition(models.Model):
     def __str__(self):
         return f"{self.entry.headword} ({self.def_number})"
 
+
 class POS(models.Model):
     entry = models.ForeignKey(Entry, on_delete=models.CASCADE, related_name="parts_of_speech")
     part_of_speech = models.TextField()
@@ -66,4 +65,4 @@ class POS(models.Model):
         db_table = 'entry_parts_of_speech'  # Must match your existing table name
 
     def __str__(self):
-        return f"{self.entry.headword} ({self.text})"
+        return f"{self.entry.headword} ({self.part_of_speech})"
