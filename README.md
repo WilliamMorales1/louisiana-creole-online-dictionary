@@ -13,3 +13,11 @@ Steps to download and use:
    4. python manage.py migrate
    5. python manage.py runserver
 4. Go to http://127.0.0.1:8000/.
+
+
+
+TODO:
+
+1. fix typos/formatting in definition.gloss and definition.examples
+2. add documentation for abbreviations and other langauge info
+3. make installation easier
