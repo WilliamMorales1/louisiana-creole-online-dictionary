@@ -19,5 +19,6 @@ Steps to download and use:
 TODO:
 
 1. fix typos/formatting in definition.gloss and definition.examples
-2. add documentation for abbreviations and other langauge info
-3. make installation easier
+2. update kouri-vini orthography in definition.examples
+3. add documentation for abbreviations and other langauge info
+4. make installation easier
