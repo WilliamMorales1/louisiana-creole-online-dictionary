@@ -23,3 +23,6 @@ class DefinitionAdmin(admin.ModelAdmin):
 class POSAdmin(admin.ModelAdmin):
     list_display = ("entry", "part_of_speech")
     search_fields = ("part_of_speech", "entry__headword")
+
+
+# login: wsm52, kourivini
