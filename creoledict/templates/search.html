@@ -5,21 +5,141 @@
     <title>Dictionary of Louisiana Creole</title>
 </head>
 <body>
-    {% load highlight %}
-    {% load text_format %}
+{% load highlight %}
+{% load text_format %}
 
-    <h1>Dictionary of Louisiana Creole</h1>
-    <p>Original Dictionary by Albert Valdman, Thomas A. Klingler, Margaret M. Marshall, Kevin J. Rottet</p>
-    <p>The contents of this website remain the intellectual property of the authors above.</p>
-    <p>Website created by William S. Morales.</p>
-    <p>Warning: There is has been no censoring of the data, including offensive language or racial slurs.</p>
+<h1>Dictionary of Louisiana Creole</h1>
+<p>The contents of this website remain the intellectual property of the following authors: 
+Albert Valdman, Thomas A. Klingler, Margaret M. Marshall, Kevin J. Rottet</p>
+
+Information on contents and orthography:
+<a id="toggle-info" style="cursor: pointer; color: #0066cc; text-decoration: underline;">
+    (see more)
+</a>
+<ul id="info-list" style="display: none;">
+    <li>Warning: There has been no censoring of the data, including offensive language or racial slurs.</li>
+    <li>
+        Orthography: Entries use the modern Kouri-Vini Orthography; however, the examples retain their original orthography based on Haitian Creole from the book.
+        There are also several examples written in a French Orthography; these have also been left as is in the book.
+        Additionally, the acute (à) and circumflex (â) when used for stress, preterit, or disambiguation, have <i>not</i> been included separately (i.e., aren't used).
+    </li>
+    <li>
+        There are several variants for certain sounds that have <i>not</i> been included in the variants for entries.
+        Please use the variants in quotations in place of the others when searching for words with the following sounds:
+        <ul>
+            <li>use "s" for /s/ ← s, ç</li>
+            <li>use "è" for /æ/ ← æ, è</li>
+            <li>use "i" for /ɪ/ ← ì, i</li>
+            <li>use "an" for /ã/ ← an, am, en, em</li>
+            <li>use "on" for /ɔ̃/ ← on, om</li>
+            <li>use "in" for /ɛ̃/ ← in, im</li>
+        </ul>
+    </li>
+    <li>
+        Parts of Speech abbreviation correspondences:
+        <ul>
+            <li>adj. = Adjective</li>
+            <li>adv. = Adverb</li>
+            <li>adv.phr. = Adverbial Phrase</li>
+            <li>art.def. = Definite Article</li>
+            <li>art.indef. = Indefinite Article</li>
+            <li>conj. = Conjunction</li>
+            <li>dem. = Demonstrative</li>
+            <li>det. = Determiner</li>
+            <li>det.poss. = Possessive Determiner</li>
+            <li>int. = Interjection</li>
+            <li>interr.phr. = Interrogative Phrase</li>
+            <li>n. = Noun</li>
+            <li>n.phr. = Noun Phrase</li>
+            <li>num.card. = Cardinal Number</li>
+            <li>num.ord. = Ordinal Number</li>
+            <li>onom. = Onomatopoeia</li>
+            <li>place n. = Place Name</li>
+            <li>prep. = Preposition</li>
+            <li>pron. = Pronoun</li>
+            <li>pron.indef. = Indefinite Pronoun</li>
+            <li>pron.refl. = Reflexive Pronoun</li>
+            <li>pron.rel. = Relative Pronoun</li>
+            <li>prop.n. = Proper Noun</li>
+            <li>ptcl. = Preverbal Particle</li>
+            <li>v. = Verb</li>
+            <li>v.aux. = Auxiliary Verb</li>
+            <li>v.cop. = Copular Verb</li>
+            <li>v.intr. = Intransitive Verb</li>
+            <li>v.mod. = Modal Verb</li>
+            <li>v.phr. = Verb Phrase</li>
+            <li>v.refl. = Reflexive Verb</li>
+            <li>v.tr. = Transitive Verb</li>
+        </ul>
+    </li>
+    <li>
+        Sources abbreviation correspondences (post-1960):
+        <ul>
+            <li>gen = (BT + CA + NE + PC + ST)</li>
+            <li>AN = Ancelet 1994</li>
+            <li>BT = Bayou Teche, field data</li>
+            <li>CA = Côte des Allemands, field data</li>
+            <li>DC = Clifton 1980</li>
+            <li>DT 77 = Tentchoff 1977</li>
+            <li>GY = Guidry, Richard</li>
+            <li>HW = Hebert Wiltz</li>
+            <li>MO 60 = Morgan 1960</li>
+            <li>MO 69 = Morgan 1969</li>
+            <li>MO 72 = Morgan 1972</li>
+            <li>NE = Neumann 1985</li>
+            <li>PC = Pointe Coupee, field data</li>
+            <li>ST = Saint Tammany, field data</li>
+        </ul>
+
+        Sources abbreviation correspondences (pre-1960):
+        <ul>
+            <li>BD = Broussard 1942</li>
+            <li>BI = Bienvenu 1933</li>
+            <li>BO = Bourgeois 1927</li>
+            <li>DU = Durand 1930</li>
+            <li>FO T# = Fortier 1895</li>
+            <li>FO 1887 = Fortier 1887</li>
+            <li>GC1 = Cable 1886a</li>
+            <li>GC2 = Cable 1886b</li>
+            <li>JR = Jarreau 1931</li>
+            <li>KB = Krehbiel 1962</li>
+            <li>LA = Lavergne 1930</li>
+            <li>ME = Mercier 1881</li>
+            <li>ME 90 = Mercier 1890</li>
+            <li>ME 91 = Mercier 1891</li>
+            <li>PE = Perret 1933</li>
+            <li>T# = Neumann 1987 Text # (T12–T17 are satirized Creole, use with caution)</li>
+            <li>TM = Marie Augustin</li>
+            <li>TN = Tinker 1935</li>
+            <li>TP = Trappey 1916</li>
+            <li>WO = Marguerite Wogan</li>
+        </ul>
+    </li>
+</ul>
+
+<p>Website created by William S. Morales.</p>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const toggle = document.getElementById("toggle-info");
+    const list = document.getElementById("info-list");
+
+    toggle.addEventListener("click", () => {
+        const isHidden = list.style.display === "none" || list.style.display === "";
+        list.style.display = isHidden ? "block" : "none";
+        toggle.innerHTML = isHidden
+            ? "(see less)"
+            : "(see more)";
+    });
+});
+</script>
 
     <form method="get" action="{% url 'search_dictionary' %}">
         <input type="text" name="q" value="{{ query }}" placeholder="Search...">
 
         <select name="field">
             <option value="headword" {% if field == "headword" %}selected{% endif %}>Louisiana Creole</option>
-            <option value="definitions" {% if field == "definitions" %}selected{% endif %}>English; French</option>
+            <option value="definitions" {% if field == "definitions" %}selected{% endif %}>English or French</option>
         </select>
 
         <select name="part_of_speech">
@@ -125,6 +245,36 @@
 .hover-container:hover > .hover-sources {
     display: inline-block;
 }
+
+#info-list ul {
+    /* Combine top and bottom margins */
+    margin-block: 0.3em 0.8em;
+    padding-left: 1.5em;
+    /* Reduce the line spacing for a tighter look */
+    line-height: 1;
+}
+#info-list li {
+    /* Reduce the space below each list item */
+    margin-bottom: 0.2em;
+}
+
+/* UNCOMMENT TO HIDE SCROLL BAR */
+/* For Firefox
+html {
+  scrollbar-width: none;
+}
+
+/* For Internet Explorer and older Edge */
+/* body {
+  -ms-overflow-style: none;
+} */
+
+/* For WebKit browsers (Chrome, Safari, and newer Edge) */
+/* body::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+} */ 
 </style>
 
 <script>

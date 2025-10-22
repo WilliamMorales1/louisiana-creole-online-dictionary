@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Entry, Definition, POS
+from .models import Entry, Definition, POS, Variant
 
 # --- Inline for Definitions inside Entry ---
 class DefinitionInline(admin.TabularInline):
@@ -13,7 +13,6 @@ class EntryAdmin(admin.ModelAdmin):
     search_fields = ("headword", "definitions__gloss")
     inlines = [DefinitionInline]
 
-# --- Definition Admin (optional standalone view) ---
 @admin.register(Definition)
 class DefinitionAdmin(admin.ModelAdmin):
     list_display = ("entry", "gloss", "examples")
@@ -24,5 +23,9 @@ class POSAdmin(admin.ModelAdmin):
     list_display = ("entry", "part_of_speech")
     search_fields = ("part_of_speech", "entry__headword")
 
+@admin.register(Variant)
+class VariantAdmin(admin.ModelAdmin):
+    list_display = ("text", "entry")
+    search_fields = ("text", "entry__headword")
 
 # login: wsm52, kourivini

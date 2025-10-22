@@ -132,17 +132,17 @@ def search_dictionary(request):
             # --- Include entry if it passes filters ---
             if (definitions_match or head_matches or variant_matches) and pos_matches and source_matches:
                 filtered.append(entry)
+        
+        # --- Apply POS & Source filters for remaining results ---
+        if selected_pos:
+            results = results.filter(parts_of_speech__part_of_speech=selected_pos)
+        if selected_source:
+            results = results.filter(
+                Q(sources__text=selected_source) |
+                Q(variants__sources__text=selected_source)
+            ).distinct()
 
         results = filtered
-
-    # --- Apply POS & Source filters for remaining results ---
-    if selected_pos:
-        results = results.filter(parts_of_speech__part_of_speech=selected_pos)
-    if selected_source:
-        results = results.filter(
-            Q(sources__text=selected_source) |
-            Q(variants__sources__text=selected_source)
-        ).distinct()
 
     # --- Prepare sources for display ---
     processed_results = []
