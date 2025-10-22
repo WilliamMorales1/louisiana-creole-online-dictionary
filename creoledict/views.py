@@ -173,6 +173,7 @@ def search_dictionary(request):
         'match_accents': match_accents,
         'include_examples': include_examples,
         'results': processed_results,
+        'result_count': len(processed_results),
         'all_pos': all_pos,
         'selected_pos': selected_pos,
         'all_sources': all_sources,
