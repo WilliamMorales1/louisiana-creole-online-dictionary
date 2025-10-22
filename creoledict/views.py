@@ -164,6 +164,8 @@ def search_dictionary(request):
         entry.variants_display = variants_list
         processed_results.append(entry)
 
+    processed_results.sort(key=lambda e: (e.headword or "").lower())
+
     context = {
         'query': display_query,
         'field': field,
