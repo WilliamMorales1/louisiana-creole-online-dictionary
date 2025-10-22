@@ -47,13 +47,16 @@ Information on contents and orthography:
             <li>dem. = Demonstrative</li>
             <li>det. = Determiner</li>
             <li>det.poss. = Possessive Determiner</li>
+            <li>f. = Feminine</li>
             <li>int. = Interjection</li>
             <li>interr.phr. = Interrogative Phrase</li>
+            <li>m. = Masculine</li>
             <li>n. = Noun</li>
             <li>n.phr. = Noun Phrase</li>
             <li>num.card. = Cardinal Number</li>
             <li>num.ord. = Ordinal Number</li>
             <li>onom. = Onomatopoeia</li>
+            <li>pl. = Plural</li>
             <li>place n. = Place Name</li>
             <li>prep. = Preposition</li>
             <li>pron. = Pronoun</li>
@@ -62,6 +65,7 @@ Information on contents and orthography:
             <li>pron.rel. = Relative Pronoun</li>
             <li>prop.n. = Proper Noun</li>
             <li>ptcl. = Preverbal Particle</li>
+            <li>sg. = Singular</li>
             <li>v. = Verb</li>
             <li>v.aux. = Auxiliary Verb</li>
             <li>v.cop. = Copular Verb</li>
@@ -178,6 +182,9 @@ document.addEventListener("DOMContentLoaded", () => {
     <hr>
 
 {% if results %}
+<h2 style="margin-left: 1em; color: #666;">
+{{ result_count }} entr{{ result_count|pluralize:"y,ies" }} found
+</h2>
 <ul>
     {% for entry in results %}
         <li style="margin-bottom: 1em; position: relative;">
@@ -225,7 +232,7 @@ document.addEventListener("DOMContentLoaded", () => {
     {% endfor %}
 </ul>
 {% else %}
-    <h2 style="margin-left: 2em; color: #666;">No entries found.</h2>
+    <h2 style="margin-left: 1em; color: #666;">No entries found.</h2>
 {% endif %}
 
 <style>
