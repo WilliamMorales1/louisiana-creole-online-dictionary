@@ -10,9 +10,37 @@ Steps to download and use:
    1. git clone https://github.com/WilliamMorales1/louisiana-creole-online-dictionary
    2. cd louisiana-creole-online-dictionary
    3. pip install -r requirements.txt
-   4. python manage.py migrate
-   5. python manage.py runserver
+   4. DJANGO_DEBUG=1 python manage.py migrate --fake-initial
+   5. DJANGO_DEBUG=1 python manage.py runserver
 4. Go to http://127.0.0.1:8000/.
+
+Local dev uses the bundled `dictionary_entries.db` (SQLite). `DJANGO_DEBUG=1` is required locally; without it the app runs in production mode and refuses to start unless `DJANGO_SECRET_KEY` is set.
+
+## Configuration
+
+| Variable | Purpose |
+| --- | --- |
+| `DJANGO_SECRET_KEY` | Required in production. |
+| `DJANGO_DEBUG` | `1` for local development only. |
+| `DJANGO_ALLOWED_HOSTS` | Comma-separated hostnames, e.g. `creole-dictionary.fly.dev`. |
+| `DATABASE_URL` | Postgres URL in production; falls back to SQLite when unset. |
+
+## Deploying (Fly.io)
+
+```sh
+fly launch --no-deploy --copy-config
+fly secrets set DJANGO_SECRET_KEY=$(python -c "import secrets; print(secrets.token_urlsafe(50))")
+fly secrets set DATABASE_URL=postgres://...
+fly deploy
+```
+
+`fly deploy` runs migrations automatically. To copy the dictionary from SQLite into an empty Postgres database:
+
+```sh
+DJANGO_DEBUG=1 python manage.py dumpdata creoledict -o dict.json.gz
+DJANGO_DEBUG=1 DATABASE_URL=postgres://... python manage.py loaddata dict.json.gz
+fly ssh console -C "python manage.py createsuperuser"
+```
 
 
 

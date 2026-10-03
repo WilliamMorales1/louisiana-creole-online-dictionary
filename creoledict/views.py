@@ -1,56 +1,36 @@
-from django.shortcuts import render
-from django.db.models import Q, Prefetch
-from .models import Entry, Variant, Source, POS
-import unicodedata
 import re
 
-# --- Utility Functions ---
-def normalize_text(text):
-    """Normalize text to NFD (decomposed) form."""
-    return unicodedata.normalize('NFD', text or '')
+from django.core.paginator import Paginator
+from django.db import connection
+from django.db.models import Prefetch, Q
+from django.shortcuts import render
 
-def strip_accents(text):
-    """Remove all accent marks from the text."""
-    text = normalize_text(text)
-    return ''.join(c for c in text if unicodedata.category(c) != 'Mn')
+from .models import POS, Entry, Source, Variant
+from .normalize import fold, plain
 
-def whole_word_match(text, search, match_accents):
-    """
-    Return True if `text` contains a word that exactly equals `search`,
-    respecting `match_accents` toggle, using the same logic as the highlight filter.
-    """
-    if not text or not search:
-        return False
+MAX_QUERY_LENGTH = 100
+PAGE_SIZE = 50
 
-    # Normalize text and search if we ignore accents
-    if not match_accents:
-        # Create normalized (accent-stripped) text and map back to original
-        normalized_chars = []
-        for ch in text:
-            nfd = unicodedata.normalize('NFD', ch)
-            for c in nfd:
-                if unicodedata.category(c) != 'Mn':
-                    normalized_chars.append(c)
-        text_to_search = ''.join(normalized_chars)
-        search_text = strip_accents(search)
+
+def text_match(columns, query, whole_word, match_accents):
+    """text_match builds an OR of lookups on the stored folded/plain copies of columns."""
+    suffix = 'folded' if match_accents else 'plain'
+    needle = fold(query) if match_accents else plain(query)
+    if whole_word:
+        # Postgres spells word boundaries \y; Django's SQLite REGEXP uses Python's re.
+        boundary = r'\y' if connection.vendor == 'postgresql' else r'\b'
+        lookup, value = 'regex', f'{boundary}{re.escape(needle)}{boundary}'
     else:
-        text_to_search = text
-        search_text = search
+        lookup, value = 'contains', needle
+    match = Q()
+    for column in columns:
+        match |= Q(**{f'{column}_{suffix}__{lookup}': value})
+    return match
 
-    # Case-insensitive match
-    text_to_search = text_to_search.lower()
-    search_text = search_text.lower()
-
-    # Match as whole words using regex
-    try:
-        pattern = fr"\b{re.escape(search_text)}\b"
-        return bool(re.search(pattern, text_to_search, flags=re.UNICODE))
-    except re.error:
-        return False
 
 # --- Main Search View ---
 def search_dictionary(request):
-    query = request.GET.get('q', '').strip()
+    query = request.GET.get('q', '').strip()[:MAX_QUERY_LENGTH]
     field = request.GET.get('field', 'headword')
     whole_word = 'whole_word' in request.GET
     match_accents = 'match_accents' in request.GET
@@ -59,13 +39,6 @@ def search_dictionary(request):
     selected_source = request.GET.get('source', '')
 
     display_query = query
-    search_query = strip_accents(query) if not match_accents else query
-
-    # Prefetch related objects to avoid N+1 queries
-    variants_prefetch = Prefetch('variants', queryset=Variant.objects.prefetch_related('sources'))
-    results = Entry.objects.all().prefetch_related(
-        'definitions', 'parts_of_speech', 'sources', variants_prefetch
-    ).distinct()
 
     # --- Populate dropdowns ---
     all_pos = POS.objects.exclude(part_of_speech__isnull=True).exclude(part_of_speech='') \
@@ -76,77 +49,33 @@ def search_dictionary(request):
     ).exclude(text__isnull=True).exclude(text='') \
         .values_list('text', flat=True).distinct().order_by('text')
 
-    # --- Apply search query ---
-    if search_query:
-        search_norm = search_query.lower() if match_accents else strip_accents(search_query).lower()
-        filtered = []
+    # --- Apply search query and filters in the database ---
+    entries = Entry.objects.all()
+    if query:
+        if field == 'definitions':
+            columns = ['definitions__gloss']
+            if include_examples:
+                columns.append('definitions__examples')
+        else:
+            columns = ['headword', 'variants__text']
+        entries = entries.filter(text_match(columns, query, whole_word, match_accents))
+    if selected_pos:
+        entries = entries.filter(parts_of_speech__part_of_speech=selected_pos)
+    if selected_source:
+        entries = entries.filter(
+            Q(sources__text=selected_source) |
+            Q(variants__sources__text=selected_source)
+        )
 
-        for entry in results:
-            definitions_match = False
-            head_matches = False
-            variant_matches = False
-
-            # --- Definitions search ---
-            if field == 'definitions':
-                for definition in entry.definitions.all():
-                    gloss = definition.gloss or ''
-                    examples = definition.examples or ''
-                    text_to_search = f"{gloss} {examples}" if include_examples else gloss
-
-                    if whole_word:
-                        if whole_word_match(text_to_search, query, match_accents):
-                            definitions_match = True
-                            break
-                    else:
-                        text_norm = text_to_search if match_accents else strip_accents(text_to_search)
-                        if search_norm in text_norm.lower():
-                            definitions_match = True
-                            break
-            else:
-                # --- Headword match ---
-                head = entry.headword or ''
-                if whole_word:
-                    head_matches = whole_word_match(head, query, match_accents)
-                else:
-                    head_norm = head if match_accents else strip_accents(head)
-                    head_matches = search_norm in head_norm.lower()
-
-                # --- Variant match ---
-                if whole_word:
-                    variant_matches = any(whole_word_match(v.text or '', query, match_accents) for v in entry.variants.all())
-                else:
-                    variant_matches = any(search_norm in (v.text if match_accents else strip_accents(v.text)).lower() for v in entry.variants.all())
-
-            # --- POS filter ---
-            pos_matches = True
-            if selected_pos:
-                pos_matches = any(p.part_of_speech == selected_pos for p in entry.parts_of_speech.all())
-
-            # --- Source filter ---
-            source_matches = True
-            if selected_source:
-                entry_sources = [s.text.strip() for s in entry.sources.all() if s.text]
-                variant_sources = [s.text.strip() for v in entry.variants.all() for s in v.sources.all() if s.text]
-                source_matches = selected_source in entry_sources or selected_source in variant_sources
-
-            # --- Include entry if it passes filters ---
-            if (definitions_match or head_matches or variant_matches) and pos_matches and source_matches:
-                filtered.append(entry)
-        
-        # --- Apply POS & Source filters for remaining results ---
-        if selected_pos:
-            results = results.filter(parts_of_speech__part_of_speech=selected_pos)
-        if selected_source:
-            results = results.filter(
-                Q(sources__text=selected_source) |
-                Q(variants__sources__text=selected_source)
-            ).distinct()
-
-        results = filtered
+    variants_prefetch = Prefetch('variants', queryset=Variant.objects.prefetch_related('sources'))
+    results = entries.distinct().order_by('headword_folded', 'id').prefetch_related(
+        'definitions', 'parts_of_speech', 'sources', variants_prefetch
+    )
+    page = Paginator(results, PAGE_SIZE).get_page(request.GET.get('page'))
 
     # --- Prepare sources for display ---
     processed_results = []
-    for entry in results:
+    for entry in page:
         # --- Entry-level sources only ---
         entry_sources = [
             s.text.strip() 
@@ -164,8 +93,6 @@ def search_dictionary(request):
         entry.variants_display = variants_list
         processed_results.append(entry)
 
-    processed_results.sort(key=lambda e: (e.headword or "").lower())
-
     context = {
         'query': display_query,
         'field': field,
@@ -173,7 +100,8 @@ def search_dictionary(request):
         'match_accents': match_accents,
         'include_examples': include_examples,
         'results': processed_results,
-        'result_count': len(processed_results),
+        'result_count': page.paginator.count,
+        'page': page,
         'all_pos': all_pos,
         'selected_pos': selected_pos,
         'all_sources': all_sources,
