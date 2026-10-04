@@ -1,8 +1,15 @@
 # Louisiana Creole Online Dictionary
 
-Valdman Louisiana Creole with improved UI and searchability.
+**Live at [creole-dictionary.fly.dev](https://creole-dictionary.fly.dev/)**
 
-Steps to download and use:
+A searchable web edition of the Valdman *Dictionary of Louisiana Creole* for Kouri-Vini, a critically endangered language. Built with members of the LSU Creole Club.
+
+- 5,139 entries, 6,519 senses and 5,055 spelling variants, each with its source attestations
+- Search headwords and variants, or glosses and example sentences
+- Accent-insensitive by default (`manje` finds `manjé`), with optional exact-accent and whole-word matching
+- Filter by part of speech or source
+
+## Running locally
 
 1. Download files and open folder in VSCode.
 2. Install Python if you don't already have it.
